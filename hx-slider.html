@@ -1,0 +1,80 @@
+<template id="hx-slider">
+  <style>
+    :host{
+      display:block;
+      background: gray;
+      position: relative;
+      overflow: hidden;
+    }
+    hx-wrapper{
+      display:block;
+    }
+    hx-wrapper:after,
+    :host:after{
+      content:"";
+      display:block;
+      clear:both;
+      height:1px;
+      margin-bottom:-1px;
+    }
+    h1{
+      color: red
+    }
+
+    hx-item{
+      display:inline-block;
+      float:left;
+    }
+  </style>
+</template>
+<script>
+'use strict';
+	(function (window, document) {
+    var elTarget = "img";
+    var compoundWidth = 0;
+    
+		function main(el) {
+      console.log("Init");
+			var clone = rootDoc.importNode(template, true);
+			el.shadow = el.createShadowRoot();
+      elTarget  =  el.getAttribute("hx-target") || elTarget ;
+
+      var images = el.querySelectorAll(elTarget);
+      var wrapper = document.createElement("hx-wrapper");
+      wrapper.innerHTML = prepareDom(images);
+      wrapper.style.minWidth = compoundWidth+"px";
+
+      el.shadow.innerHTML = wrapper.outerHTML;
+
+			el.shadow.appendChild(clone);
+
+		}
+
+    function prepareDom(targetElements){
+      var output = "";
+      for(var i = 0, len = targetElements.length; i < len; i++){
+        compoundWidth += targetElements[i].width;
+        output += wrapElement(targetElements[i].outerHTML);
+      }
+      return output;
+    }
+
+    function wrapElement(elementString){
+      return "<hx-item>"+elementString+"</hx-item>";
+    }
+
+		var rootDoc = document,compDoc = (rootDoc._currentScript || rootDoc.currentScript).ownerDocument,
+			template = compDoc.querySelector('template#hx-slider').content,element = Object.create(HTMLElement.prototype);
+
+		if (window.ShadowDOMPolyfill) {
+			WebComponents.ShadowCSS.shimStyling(template, "hx-slider");
+		}
+
+		element.createdCallback = function () {
+			main(this);
+		};
+		rootDoc.registerElement('hx-slider', {
+			prototype: element
+		});
+	})(window, document);
+</script>

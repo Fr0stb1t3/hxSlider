@@ -44,6 +44,8 @@
     var shadowDom;
 
     var elTarget = "img";
+    var images;
+
     var compoundWidth = 0;
 
     var containerW = 600, containerH = 400;
@@ -54,6 +56,24 @@
     function testClick(){
       console.log("testing");
       stopped = !stopped;
+    }
+    function navigateTo(){
+      var index = this.getAttribute('data-index');
+      console.log("Clicked and moving to"+index);
+    }
+
+    function generateControlBar(imageArray){
+      console.log(imageArray);
+      var output = document.createElement("div");
+      for(var i=0, len = imageArray.length; i < len; i++ ){
+        var a = document.createElement("a");
+        a.setAttribute("data-index",i);
+        a.innerHTML = i+1;
+        a.onclick = navigateTo ;
+        output.appendChild(a);
+        console.log(i);
+      }
+      return output;
     }
 
 		function main(el) {
@@ -66,14 +86,17 @@
 
       elTarget  =  el.getAttribute("hx-target") || elTarget;
 
-      var images = el.querySelectorAll(elTarget);
+      images = el.querySelectorAll(elTarget);
       var wrapper = document.createElement("hx-wrapper");
       wrapper.innerHTML = prepareDom(images);
       wrapper.style.minWidth = compoundWidth+"px";
 
+      /* Control bar*/
+      var controlHTML = generateControlBar(images);
       el.shadow.innerHTML = wrapper.outerHTML;
 
 			el.shadow.appendChild(clone);
+			el.shadow.appendChild(controlHTML);
       shadowDom = el.shadow;
 		}
 

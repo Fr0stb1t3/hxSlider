@@ -8,6 +8,10 @@
     }
     hx-wrapper{
       display:block;
+      position: relative;
+      -webkit-transition: all 0.2s ease;
+      -moz-transition: all 0.2s ease;
+      transition: all 0.2s ease;
     }
     hx-wrapper:after,
     :host:after{
@@ -25,19 +29,42 @@
       display:inline-block;
       float:left;
     }
+    hx-item img{
+      width:100%;
+      height: auto;
+    }
   </style>
+  <button id="playCtrl">Start/Stop</button>
+  <button id="backCtrl">Back</button>
+  <button id="nextCtrl">Next</button>
 </template>
 <script>
 'use strict';
 	(function (window, document) {
+    var shadowDom;
+
     var elTarget = "img";
     var compoundWidth = 0;
-    
+
+    var containerW = 600, containerH = 400;
+    var slideInterval;
+    var stopped = false;
+
+
+    function testClick(){
+      console.log("testing");
+      stopped = !stopped;
+    }
+
 		function main(el) {
       console.log("Init");
+      containerW  =  el.offsetWidth || containerW;
+      //containerH  =  el.offsetHeight || containerH;
+
 			var clone = rootDoc.importNode(template, true);
 			el.shadow = el.createShadowRoot();
-      elTarget  =  el.getAttribute("hx-target") || elTarget ;
+
+      elTarget  =  el.getAttribute("hx-target") || elTarget;
 
       var images = el.querySelectorAll(elTarget);
       var wrapper = document.createElement("hx-wrapper");
@@ -47,20 +74,73 @@
       el.shadow.innerHTML = wrapper.outerHTML;
 
 			el.shadow.appendChild(clone);
-
+      shadowDom = el.shadow;
 		}
+
+    function timedHook(el){
+
+      var control = el.shadow.querySelector("#playCtrl");
+      var next = el.shadow.querySelector("#nextCtrl");
+      var back = el.shadow.querySelector("#backCtrl");
+      control.onclick = testClick;
+      next.addEventListener("click", function(){moveForward(el)});
+      back.addEventListener("click", function(){moveBack(el)});
+      setInterval(function(){
+        if(stopped == false){
+          moveForward(el);
+        }
+      }, 5000);//10
+    }
+
+
+    function moveBack(el){
+      var wrapper = el.shadow.querySelector("hx-wrapper");
+      console.log("Moving forward");
+      var calcMargin =  -parseInt(wrapper.style.marginLeft);
+      console.log( calcMargin );
+      if( isNaN(calcMargin) ||  calcMargin-containerW < compoundWidth ){
+        if(isNaN(calcMargin)){
+          calcMargin = 0;
+        }
+        calcMargin -= containerW;
+        wrapper.style.marginLeft = "-"+calcMargin+"px";
+      }else{
+        wrapper.style.marginLeft = 0+"px";
+      }
+    }
+
+    function moveForward(el){
+      var wrapper = el.shadow.querySelector("hx-wrapper");
+      console.log("Moving back");
+      var calcMargin =  -parseInt(wrapper.style.marginLeft);
+      console.log( calcMargin );
+      if( isNaN(calcMargin) ||  calcMargin+containerW < compoundWidth ){
+        if(isNaN(calcMargin)){
+          calcMargin = 0;
+        }
+        calcMargin += containerW;
+        wrapper.style.marginLeft = "-"+calcMargin+"px";
+      }else{
+        wrapper.style.marginLeft = 0+"px";
+      }
+    }
 
     function prepareDom(targetElements){
       var output = "";
       for(var i = 0, len = targetElements.length; i < len; i++){
-        compoundWidth += targetElements[i].width;
+        if(targetElements[i].width > containerW)
+          compoundWidth += targetElements[i].width;
+        else {
+          compoundWidth += containerW;
+        }
         output += wrapElement(targetElements[i].outerHTML);
       }
       return output;
     }
 
     function wrapElement(elementString){
-      return "<hx-item>"+elementString+"</hx-item>";
+      var style="min-width: " + containerW + "px";
+      return "<hx-item style= '"+style+"' >"+elementString+"</hx-item>";
     }
 
 		var rootDoc = document,compDoc = (rootDoc._currentScript || rootDoc.currentScript).ownerDocument,
@@ -72,6 +152,7 @@
 
 		element.createdCallback = function () {
 			main(this);
+			timedHook(this);
 		};
 		rootDoc.registerElement('hx-slider', {
 			prototype: element
